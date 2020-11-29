@@ -82,13 +82,6 @@ let books = [
     id: 'afa5de04-344d-11e9-a414-719c6709cf3e',
     genres: ['classic', 'revolution'],
   },
-  {
-    title: 'Testi Kirja',
-    published: 2020,
-    author: 'Joe Cool',
-    id: 'afa5de03-344d-11e9-a414-719c6709cf3e',
-    genres: ['test', 'crime', 'classic'],
-  },
 ];
 
 const typeDefs = gql`
