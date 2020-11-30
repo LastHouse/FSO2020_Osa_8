@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_PERSON } from '../queries';
+import { CREATE_BOOK } from '../queries';
 
 const NewBook = (props) => {
   const [title, setTitle] = useState('');
@@ -9,7 +9,7 @@ const NewBook = (props) => {
   const [genre, setGenre] = useState('');
   const [genres, setGenres] = useState([]);
 
-  const [createBook] = useMutation(CREATE_PERSON);
+  const [createBook] = useMutation(CREATE_BOOK);
 
   if (!props.show) {
     return null;

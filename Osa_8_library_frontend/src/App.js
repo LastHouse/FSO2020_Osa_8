@@ -11,7 +11,9 @@ const App = () => {
   const books = useQuery(ALL_BOOKS, {
     pollInterval: 2000,
   });
-  const authors = useQuery(ALL_AUTHORS);
+  const authors = useQuery(ALL_AUTHORS, {
+    pollInterval: 2000,
+  });
 
   if (authors.loading || books.loading) {
     return <div>loading data...</div>;

@@ -1,4 +1,5 @@
 import React from 'react';
+import AddBirthyear from './AddBirthyear';
 
 const Authors = (props) => {
   if (!props.show) {
@@ -27,6 +28,7 @@ const Authors = (props) => {
           ))}
         </tbody>
       </table>
+      <AddBirthyear />
     </div>
   );
 };
