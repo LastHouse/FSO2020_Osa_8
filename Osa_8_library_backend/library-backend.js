@@ -71,7 +71,12 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    addBook(title: String!, published: Int, genres: [String]!): Book
+    addBook(
+      title: String!
+      author: String!
+      published: Int
+      genres: [String]!
+    ): Book
     editAuthor(name: String!, born: Int): Author
     createUser(username: String!, favoriteGenre: String!): User
     login(username: String!, password: String!): Token
@@ -108,8 +113,7 @@ const resolvers = {
         console.log(result);
         return result;
       } else {
-        const result = await Book.find({}).populate('Author');
-        //Tähän findbyid author ja sen populate...
+        const result = await Book.find({}).populate('author');
         return result;
       }
     },
@@ -125,15 +129,40 @@ const resolvers = {
   },
 
   Mutation: {
-    addBook: async (root, args) => {
+    addBook: async (root, args, context) => {
+      //console.log(args);
       const book = new Book({ ...args });
+      const currentUser = context.currentUser;
+      const currentAuthor = await Author.findOne({
+        name: { $in: [args.author] },
+      });
+      console.log('Existing Author: ', currentAuthor);
 
-      try {
-        await book.save();
-      } catch (error) {
-        throw new UserInputError(error.message, {
-          invalidArgs: args,
-        });
+      if (!currentUser) {
+        throw new AuthenticationError('not authenticated');
+      }
+
+      if (!currentAuthor) {
+        const newAuthor = new Author({ name: args.author });
+        await newAuthor.save();
+        console.log('New Author: ', newAuthor);
+        book.author = newAuthor.id;
+        try {
+          await book.save();
+        } catch (error) {
+          throw new UserInputError(error.message, {
+            invalidArgs: args,
+          });
+        }
+      } else {
+        try {
+          book.author = currentAuthor.id;
+          await book.save();
+        } catch (error) {
+          throw new UserInputError(error.message, {
+            invalidArgs: args,
+          });
+        }
       }
 
       return book;
