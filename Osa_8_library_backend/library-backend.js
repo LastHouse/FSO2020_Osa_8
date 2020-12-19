@@ -65,9 +65,10 @@ const typeDefs = gql`
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks(author: String, genre: String): [Book!]
+    allBooks(genre: String): [Book!]
     allAuthors: [Author!]
     me: User
+    booksByFavoriteGenre: [Book!]
   }
 
   type Mutation {
@@ -87,29 +88,17 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = 'NEED_HERE_A_SECRET_KEY';
 
+// Args.author puuttuu allBooksista
+
 const resolvers = {
   Query: {
     bookCount: () => Book.collection.countDocuments(),
     authorCount: () => Author.collection.countDocuments(),
     allBooks: async (root, args) => {
-      if (args.author && args.genre) {
-        let result = await Book.findById({
-          author: { $in: [args.author] },
-        }).find({ genre: { $in: [args.genre] } });
-        console.log(result);
-        return result;
-      }
-      if (args.author) {
-        let result = await Book.find({
-          author: { $in: [args.author] },
-        });
-        console.log(result);
-        return result;
-      }
       if (args.genre) {
         let result = await Book.find({
           genres: { $all: [args.genre] },
-        });
+        }).populate('author');
         console.log(result);
         return result;
       } else {
@@ -118,6 +107,13 @@ const resolvers = {
       }
     },
     allAuthors: async () => await Author.find({}),
+    booksByFavoriteGenre: async (context) =>
+      await Books.find({
+        favoriteGenre: { $in: [context.currentUser.favoriteGenre] },
+      }),
+    me: (root, args, context) => {
+      return context.currentUser;
+    },
   },
   Author: {
     bookCount: async (root) => {
@@ -141,6 +137,8 @@ const resolvers = {
       if (!currentUser) {
         throw new AuthenticationError('not authenticated');
       }
+
+      // Jos kirjan tallennus ei onnistu, niin uusi kirjailija tallennetaan silti?!?
 
       if (!currentAuthor) {
         const newAuthor = new Author({ name: args.author });

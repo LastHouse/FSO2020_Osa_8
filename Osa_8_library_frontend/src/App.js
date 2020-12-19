@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import Authors from './components/Authors';
 import Books from './components/Books';
+import Recommendations from './components/Recommendations';
 import NewBook from './components/NewBook';
 import LoginForm from './components/LoginForm';
-import LogoutButton from './components/LogoutButton';
 import { useQuery, useApolloClient } from '@apollo/client';
-import { ALL_BOOKS } from './queries';
-import { ALL_AUTHORS } from './queries';
+import { ALL_BOOKS, ALL_AUTHORS, ME } from './queries';
 
 const Notify = ({ errorMessage }) => {
   if (!errorMessage) {
@@ -25,12 +24,9 @@ const App = () => {
   const [token, setToken] = useState(null);
   const [page, setPage] = useState('authors');
   const client = useApolloClient();
-  const books = useQuery(ALL_BOOKS, {
-    pollInterval: 2000,
-  });
-  const authors = useQuery(ALL_AUTHORS, {
-    pollInterval: 2000,
-  });
+  const books = useQuery(ALL_BOOKS);
+  const authors = useQuery(ALL_AUTHORS);
+  const user = useQuery(ME);
 
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -45,6 +41,7 @@ const App = () => {
     setToken(null);
     localStorage.clear();
     client.resetStore();
+    setPage('books');
     console.log('logout clicked');
   };
 
@@ -58,12 +55,21 @@ const App = () => {
         <div>
           <button onClick={() => setPage('authors')}>authors</button>
           <button onClick={() => setPage('books')}>books</button>
+          <button onClick={() => setPage('login')}>login</button>
         </div>
         <Notify errorMessage={errorMessage} />
-        <h2>Login</h2>
-        <LoginForm setToken={setToken} setError={notify} />
         <Authors show={page === 'authors'} authors={authors.data.allAuthors} />
-        <Books show={page === 'books'} books={books.data.allBooks} />
+        <Books
+          show={page === 'books'}
+          books={books.data.allBooks}
+          setError={notify}
+        />
+        <LoginForm
+          show={page === 'login'}
+          setPage={setPage}
+          setToken={setToken}
+          setError={notify}
+        />
       </div>
     );
   }
@@ -73,8 +79,11 @@ const App = () => {
       <div>
         <button onClick={() => setPage('authors')}>authors</button>
         <button onClick={() => setPage('books')}>books</button>
+        <button onClick={() => setPage('recommendations')}>
+          recommendations
+        </button>
         <button onClick={() => setPage('add')}>add book</button>
-        <LogoutButton handleLogout={handleLogout} />
+        <button onClick={handleLogout}>logout</button>
       </div>
       <div>
         <Notify errorMessage={errorMessage} />
@@ -84,7 +93,16 @@ const App = () => {
           token={token}
           setError={notify}
         />
-        <Books show={page === 'books'} books={books.data.allBooks} />
+        <Books
+          show={page === 'books'}
+          books={books.data.allBooks}
+          setError={notify}
+        />
+        <Recommendations
+          show={page === 'recommendations'}
+          setError={notify}
+          favoriteGenre={user.data.me.favoriteGenre}
+        />
         <NewBook show={page === 'add'} setError={notify} />
       </div>
     </div>

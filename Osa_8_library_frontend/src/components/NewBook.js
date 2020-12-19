@@ -5,7 +5,7 @@ import { CREATE_BOOK, ALL_BOOKS } from '../queries';
 const NewBook = ({ setError, show }) => {
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
-  const [published, setPublished] = useState(0);
+  const [published, setPublished] = useState('');
   const [genre, setGenre] = useState('');
   const [genres, setGenres] = useState([]);
 
@@ -28,10 +28,17 @@ const NewBook = ({ setError, show }) => {
   const submit = async (event) => {
     event.preventDefault();
 
-    createBook({ variables: { title, published, author, genres } });
+    createBook({
+      variables: {
+        title,
+        published,
+        author,
+        genres,
+      },
+    });
 
     setTitle('');
-    setPublished(0);
+    setPublished('');
     setAuthor('');
     setGenres([]);
     setGenre('');

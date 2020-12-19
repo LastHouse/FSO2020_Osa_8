@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { EDIT_AUTHOR } from '../queries';
+import { ALL_AUTHORS, EDIT_AUTHOR } from '../queries';
 
 const AddBirthyear = ({ authors, setError }) => {
   const initialState = authors[0].name;
   const [name, setName] = useState(initialState);
-  const [born, setBorn] = useState(0);
+  const [born, setBorn] = useState('');
 
   const [editAuthorBirthyear] = useMutation(EDIT_AUTHOR, {
+    refetchQueries: [{ query: ALL_AUTHORS }],
     onError: (error) => {
       setError(error.graphQLErrors[0].message);
     },
@@ -16,10 +17,12 @@ const AddBirthyear = ({ authors, setError }) => {
   const submit = async (event) => {
     event.preventDefault();
 
-    editAuthorBirthyear({ variables: { name, born } });
+    editAuthorBirthyear({
+      variables: { name, born: born !== null ? born : null },
+    });
 
     setName(initialState);
-    setBorn(0);
+    setBorn('');
   };
 
   return (
