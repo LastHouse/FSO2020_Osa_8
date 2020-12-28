@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
+import { useQuery, useApolloClient } from '@apollo/client';
 import Authors from './components/Authors';
 import Books from './components/Books';
 import Recommendations from './components/Recommendations';
 import NewBook from './components/NewBook';
 import LoginForm from './components/LoginForm';
-import { useQuery, useApolloClient } from '@apollo/client';
-import { ALL_BOOKS, ALL_AUTHORS, ME } from './queries';
+import { ALL_AUTHORS, ALL_BOOKS, ME, BOOK_ADDED } from './queries';
 
 const Notify = ({ errorMessage }) => {
   if (!errorMessage) {
@@ -23,12 +23,31 @@ const Notify = ({ errorMessage }) => {
 const App = () => {
   const [token, setToken] = useState(null);
   const [page, setPage] = useState('authors');
+  const [errorMessage, setErrorMessage] = useState(null);
   const client = useApolloClient();
-  const books = useQuery(ALL_BOOKS);
   const authors = useQuery(ALL_AUTHORS);
   const user = useQuery(ME);
 
-  const [errorMessage, setErrorMessage] = useState(null);
+  const { data, loading, error, subscribeToMore } = useQuery(ALL_BOOKS);
+
+  subscribeToMore({
+    document: BOOK_ADDED,
+    updateQuery: (prev, { subscriptionData }) => {
+      if (!subscriptionData.data) return prev;
+      const newBook = subscriptionData.data.bookAdded;
+      const exists = prev.allBooks.find(({ id }) => id === newBook.id);
+      if (exists) return prev;
+
+      return Object.assign(
+        {},
+        prev,
+        {
+          allBooks: [...prev.allBooks, newBook],
+        },
+        notify(`${newBook.title} added`)
+      );
+    },
+  });
 
   const notify = (message) => {
     setErrorMessage(message);
@@ -45,7 +64,11 @@ const App = () => {
     console.log('logout clicked');
   };
 
-  if (authors.loading || books.loading) {
+  if (error) {
+    notify(error.graphQLErrors[0].message);
+  }
+
+  if (authors.loading || loading || user.loading) {
     return <div>loading data...</div>;
   }
 
@@ -58,10 +81,14 @@ const App = () => {
           <button onClick={() => setPage('login')}>login</button>
         </div>
         <Notify errorMessage={errorMessage} />
-        <Authors show={page === 'authors'} authors={authors.data.allAuthors} />
+        <Authors
+          show={page === 'authors'}
+          authors={authors.data.allAuthors}
+          setError={notify}
+        />
         <Books
           show={page === 'books'}
-          books={books.data.allBooks}
+          books={data.allBooks}
           setError={notify}
         />
         <LoginForm
@@ -95,7 +122,7 @@ const App = () => {
         />
         <Books
           show={page === 'books'}
-          books={books.data.allBooks}
+          books={data.allBooks}
           setError={notify}
         />
         <Recommendations

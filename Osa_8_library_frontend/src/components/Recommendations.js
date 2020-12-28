@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useQuery } from '@apollo/client';
 import { ALL_BOOKS_SEARCH } from '../queries';
 
@@ -11,10 +11,6 @@ const Recommendations = ({ show, favoriteGenre, setError }) => {
 
   if (error) {
     setError(error.graphQLErrors[0].message);
-  }
-
-  if (data) {
-    console.log(data);
   }
 
   if (!show | !favoriteGenre) {

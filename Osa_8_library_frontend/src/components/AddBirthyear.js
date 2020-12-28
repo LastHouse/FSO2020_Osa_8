@@ -8,10 +8,10 @@ const AddBirthyear = ({ authors, setError }) => {
   const [born, setBorn] = useState('');
 
   const [editAuthorBirthyear] = useMutation(EDIT_AUTHOR, {
-    refetchQueries: [{ query: ALL_AUTHORS }],
     onError: (error) => {
       setError(error.graphQLErrors[0].message);
     },
+    refetchQueries: [{ query: ALL_AUTHORS }],
   });
 
   const submit = async (event) => {

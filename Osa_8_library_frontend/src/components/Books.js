@@ -14,10 +14,6 @@ const Books = ({ show, books, setError }) => {
     },
   });
 
-  if (data) {
-    console.log(data);
-  }
-
   if (!show) {
     return null;
   }

@@ -13,7 +13,9 @@ const NewBook = ({ setError, show }) => {
     onError: (error) => {
       setError(error.graphQLErrors[0].message);
     },
-    update: (store, response) => {
+    refetchQueries: [{ query: ALL_BOOKS }],
+
+    /* update: (store, response) => {
       const dataInStore = store.readQuery({ query: ALL_BOOKS });
       store.writeQuery({
         query: ALL_BOOKS,
@@ -22,7 +24,7 @@ const NewBook = ({ setError, show }) => {
           allBooks: [...dataInStore.allBooks, response.data.addBook],
         },
       });
-    },
+    }, */
   });
 
   const submit = async (event) => {
