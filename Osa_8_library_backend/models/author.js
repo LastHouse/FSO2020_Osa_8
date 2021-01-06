@@ -10,7 +10,7 @@ const schema = new mongoose.Schema({
   born: {
     type: Number,
   },
-  /*  bookCount: [
+  /* bookCount: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Book',

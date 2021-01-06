@@ -9,6 +9,8 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = 'NEED_HERE_A_SECRET_KEY';
 
 const mongoose = require('mongoose');
+const DataLoader = require('dataloader');
+
 const Book = require('./models/book');
 const Author = require('./models/author');
 const User = require('./models/user');
@@ -39,7 +41,7 @@ const typeDefs = gql`
     name: String!
     id: ID!
     born: Int
-    bookCount: Int
+    bookCount: [Book]
   }
 
   type Book {
@@ -70,7 +72,7 @@ const typeDefs = gql`
     authorCount: Int!
     allBooks(genre: String): [Book!]
     allAuthors(born: YesNo): [Author!]
-    me: User!
+    me: User
     booksByFavoriteGenre: [Book!]
     bookAdded: Book!
   }
@@ -94,6 +96,18 @@ const typeDefs = gql`
 
 const { PubSub } = require('apollo-server');
 const pubsub = new PubSub();
+pubsub.ee.setMaxListeners(100);
+
+const batchGetBooksById = async (ids) => {
+  const books = ids.map((authorId) => {
+    return Book.find({
+      author: { $in: [authorId] },
+    });
+  });
+  return books;
+};
+
+const bookLoader = new DataLoader(batchGetBooksById);
 
 // Args.author puuttuu allBooksista
 
@@ -106,32 +120,27 @@ const resolvers = {
         let result = await Book.find({
           genres: { $all: [args.genre] },
         }).populate('author');
-        console.log(result);
         return result;
       } else {
         const result = await Book.find({}).populate('author');
         return result;
       }
     },
-    allAuthors: async () => await Author.find({}),
 
+    allAuthors: () => Author.find({}),
+
+    me: (root, args, context) => {
+      return context.currentUser;
+    },
     booksByFavoriteGenre: async (context) =>
       await Books.find({
         favoriteGenre: { $in: [context.currentUser.favoriteGenre] },
       }),
-    me: (root, args, context) => {
-      return context.currentUser;
-    },
   },
 
-  //MUUTA TÄMÄ! POPULATE BY COUNT TMS.
-
   Author: {
-    bookCount: async (root) => {
-      let BookByAuthor = await Book.find({
-        author: { $in: [root.id] },
-      });
-      return BookByAuthor.length;
+    bookCount: (root) => {
+      return bookLoader.load(root.id);
     },
   },
 
@@ -147,7 +156,7 @@ const resolvers = {
         throw new AuthenticationError('not authenticated');
       }
 
-      // Jos kirjan tallennus ei onnistu, niin uusi kirjailija tallennetaan silti?!?
+      // Jos kirjan tallennus ei onnistu, niin uusi kirjailija tallennetaan silti...
 
       if (!currentAuthor) {
         const newAuthor = new Author({ name: args.author });
@@ -174,8 +183,6 @@ const resolvers = {
 
       return book;
     },
-
-    // <---------------------------------------------------------------
 
     editAuthor: async (root, args, context) => {
       const author = await Author.findOne({ name: { $in: [args.name] } });

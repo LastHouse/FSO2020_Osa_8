@@ -17,7 +17,6 @@ const LoginForm = ({ setError, setToken, show, setPage }) => {
     if (result.data) {
       const token = result.data.login.value;
       setToken(token);
-      //console.log(token);
       localStorage.setItem('library_user_token', token);
     }
   }, [result.data, setToken]);

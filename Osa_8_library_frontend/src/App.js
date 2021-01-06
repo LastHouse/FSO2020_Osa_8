@@ -5,7 +5,7 @@ import Books from './components/Books';
 import Recommendations from './components/Recommendations';
 import NewBook from './components/NewBook';
 import LoginForm from './components/LoginForm';
-import { ALL_AUTHORS, ALL_BOOKS, ME, BOOK_ADDED } from './queries';
+import { ALL_AUTHORS, ALL_BOOKS, BOOK_ADDED } from './queries';
 
 const Notify = ({ errorMessage }) => {
   if (!errorMessage) {
@@ -26,9 +26,8 @@ const App = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const client = useApolloClient();
   const authors = useQuery(ALL_AUTHORS);
-  const user = useQuery(ME);
 
-  const { data, loading, error, subscribeToMore } = useQuery(ALL_BOOKS);
+  const { data, error, loading, subscribeToMore } = useQuery(ALL_BOOKS);
 
   subscribeToMore({
     document: BOOK_ADDED,
@@ -61,14 +60,13 @@ const App = () => {
     localStorage.clear();
     client.resetStore();
     setPage('books');
-    console.log('logout clicked');
   };
 
   if (error) {
     notify(error.graphQLErrors[0].message);
   }
 
-  if (authors.loading || loading || user.loading) {
+  if (!authors.data || loading) {
     return <div>loading data...</div>;
   }
 
@@ -125,11 +123,7 @@ const App = () => {
           books={data.allBooks}
           setError={notify}
         />
-        <Recommendations
-          show={page === 'recommendations'}
-          setError={notify}
-          favoriteGenre={user.data.me.favoriteGenre}
-        />
+        <Recommendations show={page === 'recommendations'} setError={notify} />
         <NewBook show={page === 'add'} setError={notify} />
       </div>
     </div>

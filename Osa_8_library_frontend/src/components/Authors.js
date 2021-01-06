@@ -5,7 +5,6 @@ const Authors = ({ show, authors, token, setError }) => {
   if (!show) {
     return null;
   }
-  //const authors = props.authors;
 
   if (!token) {
     return (
@@ -22,7 +21,7 @@ const Authors = ({ show, authors, token, setError }) => {
               <tr key={a.name}>
                 <td>{a.name}</td>
                 <td>{a.born}</td>
-                <td>{a.bookCount}</td>
+                <td>{a.bookCount.length}</td>
               </tr>
             ))}
           </tbody>
@@ -45,7 +44,7 @@ const Authors = ({ show, authors, token, setError }) => {
             <tr key={a.name}>
               <td>{a.name}</td>
               <td>{a.born}</td>
-              <td>{a.bookCount}</td>
+              <td>{a.bookCount.length}</td>
             </tr>
           ))}
         </tbody>

@@ -1,27 +1,40 @@
-import React from 'react';
-import { useQuery } from '@apollo/client';
-import { ALL_BOOKS_SEARCH } from '../queries';
+import React, { useEffect } from 'react';
+import { useQuery, useLazyQuery } from '@apollo/client';
+import { ME, ALL_BOOKS_SEARCH } from '../queries';
 
-const Recommendations = ({ show, favoriteGenre, setError }) => {
-  const genre = favoriteGenre;
-
-  const { loading, error, data } = useQuery(ALL_BOOKS_SEARCH, {
-    variables: { genre },
+const Recommendations = ({ show, setError }) => {
+  const { data } = useQuery(ME, {
+    onError: (error) => {
+      setError(error.graphQLErrors[0].message);
+    },
   });
 
-  if (error) {
-    setError(error.graphQLErrors[0].message);
-  }
+  const [allBooksSearch, { data: booksInFavoriteGenre }] = useLazyQuery(
+    ALL_BOOKS_SEARCH,
+    {
+      onError: (error) => {
+        setError(error.graphQLErrors[0].message);
+      },
+    }
+  );
 
-  if (!show | !favoriteGenre) {
+  useEffect(() => {
+    if (data) {
+      allBooksSearch({ variables: { genre: data.me.favoriteGenre } });
+    }
+  }, [data, allBooksSearch]);
+
+  if (!show) {
     return null;
   }
 
-  if (loading) return <p>Loading ...</p>;
+  if (data === undefined || booksInFavoriteGenre === undefined) {
+    return <p>Loading</p>;
+  }
 
   return (
     <div>
-      <h2>Books in your favorite genre "{favoriteGenre}"</h2>
+      <h2>Books in your favorite genre "{data.me.favoriteGenre}"</h2>
       <table>
         <tbody>
           <tr>
@@ -29,7 +42,7 @@ const Recommendations = ({ show, favoriteGenre, setError }) => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {data.allBooks.map((b) => (
+          {booksInFavoriteGenre.allBooks.map((b) => (
             <tr key={b.title}>
               <td>{b.title}</td>
               <td>{b.author.name}</td>

@@ -6,7 +6,9 @@ export const ALL_AUTHORS = gql`
       name
       id
       born
-      bookCount
+      bookCount {
+        title
+      }
     }
   }
 `;
@@ -78,7 +80,9 @@ export const EDIT_AUTHOR = gql`
       name
       id
       born
-      bookCount
+      bookCount {
+        title
+      }
     }
   }
 `;
